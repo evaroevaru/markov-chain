@@ -1,0 +1,183 @@
+# Imports all modules
+import tkinter as tk
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
+import sys
+# Mapping function created and used to match each router to a specific index, so A = 0, B = 1; etc.
+def mapping(var):
+    return ord(var.strip()) - 65
+# Main function used for calculations
+def calc():
+    # Used to store the value for the label.
+    adj_mtrx_var_new = ""
+    # Gets values from all entries to calculate initial state
+    router_1_value = router1_entry.get()
+    router_2_value = router2_entry.get()
+    router_3_value = router3_entry.get()
+    router_4_value = router4_entry.get()
+    router_5_value = router5_entry.get()
+    initial_state = [router_1_value, router_2_value, router_3_value, router_4_value, router_5_value]
+    # Converts all values in the initial_state list into floats, to allow decimals.
+    for i in range(5):
+        initial_state[i] = float(initial_state[i])
+    total_router_value = float(router_1_value) + float(router_2_value) + float(router_3_value) + float(router_4_value) + float(router_5_value)
+    # If-statement checks if the total of the submitted values add to 1, and otherwise stops the program from running any further without a changed input
+    if total_router_value !=1 or total_router_value == '':
+        sys.exit("Values do not add to 1.")
+    # Defines the adjacency matrix as a nested list, and another list for keeping track of the amount of times a router has acted as a source.
+    adjacency_matrix = [
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0]
+    ]
+    packets_per_router = [0,0,0,0,0]
+
+    # Opens the network traffic file and reads through every line, splitting each of them into variables for source and destination.
+    # The mapping function is then used to provide an index for these routers, which is required to add one to the position of the corresponding value in the adjacency matrix.
+    # The program then adds 1 to the list for packets sent by source routers.
+    with open('network_traffic.txt','r') as file:
+        for line in file:
+            source,dest = line.split('->')
+            transfer_router_index = mapping(source)
+            receiving_router_index = mapping(dest)
+            adjacency_matrix[transfer_router_index][receiving_router_index] +=1
+            packets_per_router[transfer_router_index] +=1
+    # Repeat loop of length 5 for each list inside the nested list, representing each router is used.
+    # The third line below this one creates a variable that is equal to the amount of times the corresponding router to the index has sent a packet.
+    # Another repeat loop is used to convert every value in the adjacency matrix to a probability.
+    for i in range(5):
+        ppr_counter = packets_per_router[i]
+        for j in range(5):
+            adjacency_matrix_value = adjacency_matrix[i][j]
+            adjacency_matrix[i][j] = round(adjacency_matrix_value/ppr_counter,4)
+    print('Adjacency Matrix')
+    # Prints every line of data of the adjacency matrix used in multiplication using a for-loop
+    for probability in adjacency_matrix:
+        print(probability)
+        adj_mtrx_var_new = adj_mtrx_var_new + str(probability) +"\n"
+    adj_mtrx_var.set(adj_mtrx_var_new)
+    print('')
+    # Sets the current state of the transition probabilities to the initial state inputted earlier.
+    current_state = initial_state
+    print('Transition Probabilities')
+    # For the amount of days inputted,  calculates the transition probabilities by multiplying values in the adjacency matrix with the corresponding values in the current_state list.
+    # This list contains the transition matrix probabilities, which are then applied to the new_state list, and current_state is set to new_state.
+    new_state = [0,0,0,0,0]
+    if number_of_days.get() <1:
+        print('You have entered a number of days under 1. Use a number that is equivalent to, or greater than 1. ')
+    for i in range(number_of_days.get()):
+        new_state = [0,0,0,0,0]
+        for i in range(5):
+            for j in range(5):
+                new_state[i] += round(current_state[j]*adjacency_matrix[j][i],4)
+
+        current_state = new_state
+    print(new_state)
+    for i in range(5):
+        new_state[i] = round(new_state[i], 4)
+    transition_prob_var.set(new_state)
+    print('')
+    # Uses the same calculations for the equilibrium state.
+    current_state = initial_state
+    print('Equilibrium Probabilities')
+    for i in range(100):
+        new_state = [0,0,0,0,0]
+
+        for i in range(len(current_state)):
+            for j in range(len(adjacency_matrix)):
+                new_state[i] += round(current_state[j]*adjacency_matrix[j][i],4)
+
+        current_state = new_state
+    print(new_state)
+    for i in range(5):
+        new_state[i] = round(new_state[i], 4)
+    eq_prob_var.set(new_state)
+
+
+
+
+# Tkinter GUI
+# Creates the Tkinter window
+root = tk.Tk()
+root.title('Matrix Multiplication')
+root.geometry("1000x600")
+root.resizable(True, True)
+root.minsize(1000,600)
+# Creates the button that when clicked, deploys the function used for calculation of matrix probabilities.
+calc_btn = ttk.Button(root, text="Calculate", bootstyle=SUCCESS, command=calc)
+calc_btn.place(relx=0.4, rely=0.9, anchor=CENTER)
+
+# Creates a button to quit the program.
+quit_btn = ttk.Button(root, text="Quit", bootstyle=(DANGER), command=root.destroy)
+quit_btn.place(relx=0.6, rely=0.9, anchor=CENTER)
+
+
+# Creates a label and an entry element to receive the input of number of days.
+entry_lbl = ttk.Label(text="Enter number of days: ")
+entry_lbl.place(relx=0.33, rely=0.1, anchor=CENTER)
+
+number_of_days = tk.IntVar()
+number_of_days.set(1)
+input_entry = ttk.Entry(root, textvariable=number_of_days, bootstyle=INFO)
+input_entry.place(relx=0.67, rely=0.1, anchor=CENTER)
+
+# Creates the label and entry to receive the probability that the packet starts at Router A.
+router1_lbl = ttk.Label(text="Enter probability of starting at Router A: ")
+router1_lbl.place(relx=0.33, rely=0.2, anchor=CENTER)
+
+router1prob = tk.IntVar()
+router1_entry = ttk.Entry(root, textvariable=router1prob, bootstyle=INFO)
+router1_entry.place(relx=0.67, rely=0.2, anchor=CENTER)
+# Creates the label and entry to receive the probability that the packet starts at Router B.
+router2_lbl = ttk.Label(text="Enter probability of starting at Router B:  ")
+router2_lbl.place(relx=0.33, rely=0.3, anchor=CENTER)
+
+router2prob = tk.IntVar()
+router2_entry = ttk.Entry(root, textvariable=router2prob, bootstyle=INFO)
+router2_entry.place(relx=0.67, rely=0.3, anchor=CENTER)
+# Creates the label and entry to receive the probability that the packet starts at Router C.
+router3_lbl = ttk.Label(text="Enter probability of starting at Router C:  ")
+router3_lbl.place(relx=0.33, rely=0.4, anchor=CENTER)
+
+router3prob = tk.IntVar()
+router3_entry = ttk.Entry(root, textvariable=router3prob, bootstyle=INFO)
+router3_entry.place(relx=0.67, rely=0.4, anchor=CENTER)
+# Creates the label and entry to receive the probability that the packet starts at Router D.
+router4_lbl = ttk.Label(text="Enter probability of starting at Router D:  ")
+router4_lbl.place(relx=0.33, rely=0.5, anchor=CENTER)
+
+router4prob = tk.IntVar()
+router4_entry = ttk.Entry(root, textvariable=router4prob, bootstyle=INFO)
+router4_entry.place(relx=0.67, rely=0.5, anchor=CENTER)
+# Creates the label and entry to receive the probability that the packet starts at Router E.
+router5_lbl = ttk.Label(text="Enter probability of starting at Router E:   ")
+router5_lbl.place(relx=0.33, rely=0.6, anchor=CENTER)
+
+router5prob = tk.IntVar()
+router5_entry = ttk.Entry(root, textvariable=router5prob, bootstyle=INFO)
+router5_entry.place(relx=0.67, rely=0.6, anchor=CENTER)
+
+# Creates the labels that show the data
+adj_mtrx_var = ttk.StringVar()
+adj_mtrx_lbl = ttk.Label(text="Adjacency Matrix:  ")
+adj_mtrx_lbl.place(relx=0.15, rely=0.77, anchor=CENTER)
+adj_mtrx = ttk.Label(text="", textvariable=adj_mtrx_var)
+adj_mtrx.place(relx=0.31, rely=0.77, anchor=CENTER)
+
+transition_prob_var = ttk.StringVar()
+transition_prob_lbl = ttk.Label(text="Transition Probabilities:  ")
+transition_prob_lbl.place(relx=0.55, rely=0.7, anchor=CENTER)
+transition_prob = ttk.Label(text="", textvariable=transition_prob_var)
+transition_prob.place(relx=0.75, rely=0.7, anchor=CENTER)
+
+
+eq_prob_var = ttk.StringVar()
+eq_prob_lbl = ttk.Label(text="Equilibrium Probabilities:  ")
+eq_prob_lbl.place(relx=0.55, rely=0.8, anchor=CENTER)
+eq_prob = ttk.Label(text="", textvariable=eq_prob_var)
+eq_prob.place(relx=0.75, rely=0.8, anchor=CENTER)
+
+# Used to run the program.
+root.mainloop()

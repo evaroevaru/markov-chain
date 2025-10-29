@@ -1,0 +1,132 @@
+#section 5
+import tkinter as tk
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
+import sys
+# main program
+def mapping(var):
+    return ord(var.strip()) - 65
+def calc():
+    r1v = router1_entry.get()
+    r2v = router2_entry.get()
+    r3v = router3_entry.get()
+    r4v = router4_entry.get()
+    r5v = router5_entry.get()
+    initial_state = [r1v,r2v,r3v,r4v,r5v]
+    for i in range(5):
+        initial_state[i] = int(initial_state[i])
+    trv = int(r1v) + int(r2v) + int(r3v) + int(r4v) + int(r5v)
+    if trv !=1 or trv == '':
+        sys.exit("Values do not add to 1.")
+    adjacency_matrix = [
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0]
+    ]
+    ppr = [0,0,0,0,0]
+
+    # figure out initial router
+    #
+    with open('network_traffic.txt','r') as file:
+        for line in file:
+            source,dest = line.split('->')
+            transfer_router_index = mapping(source)
+            receiving_router_index = mapping(dest)
+            adjacency_matrix[transfer_router_index][receiving_router_index] +=1
+            ppr[transfer_router_index] +=1
+            
+    for i in range(5):
+        dpr = ppr[i]
+        for j in range(5):
+            counter = adjacency_matrix[i][j]
+            adjacency_matrix[i][j] = round(counter/dpr,4)
+    print('adjacency matrix')
+    for prob in adjacency_matrix:
+        print(prob)
+    # calculate state and equilibrium
+    current_state = initial_state
+    print('transition probabilities')
+    new_state = [0,0,0,0,0]
+    for i in range(nodays.get()):
+        new_state = [0,0,0,0,0]
+
+        for i in range(len(current_state)):
+            for j in range(len(adjacency_matrix)):
+                new_state[i] += round(current_state[j]*adjacency_matrix[j][i],4)
+
+        current_state = new_state
+    print(new_state)
+    current_state = initial_state
+    print('equilibrium probabilities')
+    for i in range(100):
+        new_state = [0,0,0,0,0]
+
+        for i in range(len(current_state)):
+            for j in range(len(adjacency_matrix)):
+                new_state[i] += round(current_state[j]*adjacency_matrix[j][i],4)
+
+        current_state = new_state
+    print(new_state)
+
+
+
+# tk
+root = tk.Tk()
+root.geometry("800x400")
+root.resizable(True, True)
+root.minsize(400, 200)
+calc_btn = ttk.Button(root, text="Calculate", bootstyle=SUCCESS, command=calc)
+calc_btn.place(relx=0.4, rely=0.8, anchor=CENTER)
+
+
+quit_btn = ttk.Button(root, text="Quit", bootstyle=(DANGER), command=root.destroy)
+quit_btn.place(relx=0.6, rely=0.8, anchor=CENTER)
+
+
+
+entry_lbl = ttk.Label(text="Enter number of days: ")
+entry_lbl.place(relx=0.33, rely=0.1, anchor=CENTER)
+
+nodays = tk.IntVar()
+input_entry = ttk.Entry(root, textvariable=nodays, bootstyle=INFO)
+input_entry.place(relx=0.67, rely=0.1, anchor=CENTER)
+
+#router 1
+router1_lbl = ttk.Label(text="Enter probability of starting at Router A: ")
+router1_lbl.place(relx=0.33, rely=0.2, anchor=CENTER)
+
+router1prob = tk.IntVar()
+router1_entry = ttk.Entry(root, textvariable=router1prob, bootstyle=INFO)
+router1_entry.place(relx=0.67, rely=0.2, anchor=CENTER)
+#router 2
+router2_lbl = ttk.Label(text="Enter probability of starting at Router B:  ")
+router2_lbl.place(relx=0.33, rely=0.3, anchor=CENTER)
+
+router2prob = tk.IntVar()
+router2_entry = ttk.Entry(root, textvariable=router2prob, bootstyle=INFO)
+router2_entry.place(relx=0.67, rely=0.3, anchor=CENTER)
+#router 3
+router3_lbl = ttk.Label(text="Enter probability of starting at Router C:  ")
+router3_lbl.place(relx=0.33, rely=0.4, anchor=CENTER)
+
+router3prob = tk.IntVar()
+router3_entry = ttk.Entry(root, textvariable=router3prob, bootstyle=INFO)
+router3_entry.place(relx=0.67, rely=0.4, anchor=CENTER)
+#router 4
+router4_lbl = ttk.Label(text="Enter probability of starting at Router D:  ")
+router4_lbl.place(relx=0.33, rely=0.5, anchor=CENTER)
+
+router4prob = tk.IntVar()
+router4_entry = ttk.Entry(root, textvariable=router4prob, bootstyle=INFO)
+router4_entry.place(relx=0.67, rely=0.5, anchor=CENTER)
+#router 5
+router5_lbl = ttk.Label(text="Enter probability of starting at Router E:   ")
+router5_lbl.place(relx=0.33, rely=0.6, anchor=CENTER)
+
+router5prob = tk.IntVar()
+router5_entry = ttk.Entry(root, textvariable=router5prob, bootstyle=INFO)
+router5_entry.place(relx=0.67, rely=0.6, anchor=CENTER)
+
+root.mainloop()

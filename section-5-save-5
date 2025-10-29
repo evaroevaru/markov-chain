@@ -1,0 +1,104 @@
+#section 5
+import tkinter as tk
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
+
+# main program
+initial_state = [0,0,0,0,0]
+adjacency_matrix = [
+    [0,0,0,0,0],
+    [0,0,0,0,0],
+    [0,0,0,0,0],
+    [0,0,0,0,0],
+    [0,0,0,0,0]
+]
+def calc():
+    initial_state = [0,0,0,0,0]
+    routera = [0,0,0,0,0]
+    routerb = [0,0,0,0,0]
+    routerc = [0,0,0,0,0]
+    routerd = [0,0,0,0,0]
+    routere = [0,0,0,0,0]
+    adjacency_matrix = [
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0]
+    ]
+         
+
+    # figure out initial router
+    initial_router = dropdown.get()
+    ascii1 = 65
+    initial_state_pos = 0
+    for i in range(5):
+        if chr(ascii1) == initial_router:
+            initial_state[initial_state_pos] = 1
+        ascii1 += 1
+        initial_state_pos += 1
+    print(f'initial state is {initial_state}')
+    #
+    nolines = 0
+    j = 0
+    k = 0
+    ascii2 = 65
+    ascii3 = 65
+    with open('network_traffic.txt','r') as file:
+        for line in file:
+            nolines += 1
+        print(nolines)
+        file.seek(0)
+        for line in file:
+            source,dest = line.split('->')
+            state = 0
+            for i in range(5):
+                if source == chr(ascii2):
+                    for i in range(5):
+                        if dest == chr(ascii3):
+                            state += 1
+                        print(chr(ascii3))
+                        print(str(k))
+                        k +=1
+                        ascii3 += 1
+                        state = round(state/nolines,4)
+                        adjacency_matrix[j][k] = state
+                    ascii3 = 65
+                    k = 0
+                    ascii2 += 1
+                    print(j)
+                    j+=1
+
+                
+
+
+
+# tk
+root = tk.Tk()
+root.geometry("500x300")
+root.resizable(True, True)
+root.minsize(400, 200)
+calc_btn = ttk.Button(root, text="Calculate", bootstyle=SUCCESS, command=calc)
+calc_btn.place(relx=0.4, rely=0.6, anchor=CENTER)
+
+
+quit_btn = ttk.Button(root, text="Quit", bootstyle=(DANGER), command=root.destroy)
+quit_btn.place(relx=0.6, rely=0.6, anchor=CENTER)
+
+dropdown_lbl = ttk.Label(text="Select initial router: ")
+dropdown_lbl.place(relx=0.33, rely=0.4, anchor=CENTER)
+
+n = tk.IntVar()
+dropdown = ttk.Combobox(root, textvariable=n, state='readonly', style='info' )
+dropdown['values'] = ('A', 'B', 'C', 'D', 'E')
+dropdown.place(relx=0.67, rely=0.4, anchor=CENTER)
+dropdown.set("A")
+
+entry_lbl = ttk.Label(text="Enter number of days: ")
+entry_lbl.place(relx=0.33, rely=0.2, anchor=CENTER)
+
+nodays = tk.IntVar()
+input_entry = ttk.Entry(root, textvariable=nodays)
+input_entry.place(relx=0.67, rely=0.2, anchor=CENTER)
+
+root.mainloop()

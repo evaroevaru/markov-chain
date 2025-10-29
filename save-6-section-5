@@ -1,0 +1,79 @@
+#section 5
+import tkinter as tk
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
+
+# main program
+def mapping(var):
+    return ord(var.strip()) - 65
+def calc():
+    initial_state = [0,0,0,0,0]
+    adjacency_matrix = [
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0],
+         [0,0,0,0,0]
+    ]
+    ppr = [0,0,0,0,0]
+
+    # figure out initial router
+    initial_router = dropdown.get()
+    ascii1 = 65
+    initial_state_pos = 0
+    for i in range(5):
+        if chr(ascii1) == initial_router:
+            initial_state[initial_state_pos] = 1
+        ascii1 += 1
+        initial_state_pos += 1
+    print(f'initial state is {initial_state}')
+    #
+    with open('network_traffic.txt','r') as file:
+        for line in file:
+            source,dest = line.split('->')
+            transfer_router_index = mapping(source)
+            receiving_router_index = mapping(dest)
+            adjacency_matrix[transfer_router_index][receiving_router_index] +=1
+            ppr[transfer_router_index] +=1
+            
+    for i in range(5):
+        dpr = ppr[i]
+        for j in range(5):
+            counter = adjacency_matrix[i][j]
+            adjacency_matrix[i][j] = round(counter/dpr,4)
+    for prob in adjacency_matrix:
+        print(prob)
+    # calculate state and equilibrium
+    
+
+
+
+# tk
+root = tk.Tk()
+root.geometry("500x300")
+root.resizable(True, True)
+root.minsize(400, 200)
+calc_btn = ttk.Button(root, text="Calculate", bootstyle=SUCCESS, command=calc)
+calc_btn.place(relx=0.4, rely=0.6, anchor=CENTER)
+
+
+quit_btn = ttk.Button(root, text="Quit", bootstyle=(DANGER), command=root.destroy)
+quit_btn.place(relx=0.6, rely=0.6, anchor=CENTER)
+
+dropdown_lbl = ttk.Label(text="Select initial router: ")
+dropdown_lbl.place(relx=0.33, rely=0.4, anchor=CENTER)
+
+n = tk.IntVar()
+dropdown = ttk.Combobox(root, textvariable=n, state='readonly', style='info' )
+dropdown['values'] = ('A', 'B', 'C', 'D', 'E')
+dropdown.place(relx=0.67, rely=0.4, anchor=CENTER)
+dropdown.set("A")
+
+entry_lbl = ttk.Label(text="Enter number of days: ")
+entry_lbl.place(relx=0.33, rely=0.2, anchor=CENTER)
+
+nodays = tk.IntVar()
+input_entry = ttk.Entry(root, textvariable=nodays)
+input_entry.place(relx=0.67, rely=0.2, anchor=CENTER)
+
+root.mainloop()
